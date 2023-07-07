@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flask Simple URL Shortener</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+	function copyToClipboard(element) {
+          var $temp = $("<input>");
+          $("body").append($temp);
+          $temp.val('{{ base_domain }}/sl/' + $(element).text()).select();
+          document.execCommand("copy");
+          $temp.remove();
+	  Swal.fire({
+            title: 'Copied!',
+            text: '{{ base_domain }}/sl/' + $(element).text(),
+            icon: 'success',
+            confirmButtonText: 'Close'
+        });
+        }
+    </script>
+
+<script>
+    function deleteUrl(short_url, element) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url:  short_url + '/delete',
+                    type: 'POST',
+                    data: {
+                        _method: 'DELETE',
+                        _token: "{{ csrf_token }}"
+                    },
+                    success: function() {
+                        $(element).closest('li').remove();
+                        Swal.fire(
+                            'Deleted!',
+                            'The URL has been deleted.',
+                            'success'
+                        )
+                    },
+                    error: function() {
+                        Swal.fire(
+                            'Error!',
+                            'There was an error deleting the URL.',
+                            'error'
+                        )
+                    }
+                });
+            }
+        })
+    }
+</script>
+
+
+    <style>
+        .btn-sm {
+            display: block;
+            margin: 0 auto;
+        }
+
+        body {
+            background-color: #F0F0F0;
+            font-family: Arial, sans-serif;
+        }
+
+        .header {
+            padding: 15px;
+            background-color: #333;
+            color: #fff;
+            border-bottom: 3px solid #007BFF;
+            text-align: center;
+            position: relative;
+        }
+
+        .footer {
+            padding: 5px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-top: 3px solid #007BFF;
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 40px;
+            line-height: 30px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .header .user-info {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+        }
+
+        .container {
+            margin-top: 70px;
+            margin-bottom: 70px;
+        }
+
+        .list-group-item {
+            position: relative;
+            display: block;
+            padding: 1.5rem 1.25rem;
+            background-color: #FFF;
+            border: 1px solid rgba(0,0,0,.125);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Flask Simple URL Shortener</h1>
+        <div class="user-info">
+            <p id="username" style="display: inline; margin-right: 10px;">{{ username }}</p>
+            <a class="btn btn-warning" href="logout">Logout</a>
+        </div>
+    </header>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h4 class="mb-3">Create a short URL</h4>
+                <form method="POST" class="needs-validation" novalidate>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="url">Original URL</label>
+                            <input type="url" class="form-control" name="url" id="url" placeholder="Enter original URL" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="short_url">Short URL</label>
+                            <input type="text" class="form-control" name="short_url" id="short_url" placeholder="Enter short URL" required>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-lg btn-block" type="submit">Shorten URL</button>
+                </form>
+            </div>
+        </div>
+        <hr class="mb-4">
+        <div class="row">
+            <div class="col-md-12">
+                <h4 class="mb-3">Existing URLs</h4>
+                <ul class="list-group mb-3">
+                {% for url in urls %}
+    <li class="list-group-item">
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="my-0" id="{{ url.short_url }}">{{ url.short_url }}</h6>
+                <small class="text-muted" style="word-wrap: break-word;">{{ url.original_url }}</small>
+            </div>
+            <div class="col-md-2 text-center">
+                <button class="btn btn-secondary btn-sm mx-auto" onclick="copyToClipboard('#{{ url.short_url }}')">Copy</button>
+            </div>
+            <div class="col-md-2">
+                <form method="POST" action="{{ url_for('main.delete_short_url', short_url=url.short_url) }}">
+		    <button class="btn btn-danger btn-sm" type="button" onclick="deleteUrl('{{ url.short_url }}', this)">Delete</button>
+                </form>
+            </div>
+        </div>
+    </li>
+{% endfor %}
+		</ul>
+            </div>
+        </div>
+    </div>
+    <footer class="footer">
+        <p>&copy; 2023 Flask Simple URL Shortener</p>
+    </footer>
+</body>
+</html>
+
