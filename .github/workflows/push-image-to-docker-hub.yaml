@@ -10,5 +10,5 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: amdadulbari/flask-simple-url-shortner app
+          repository: amdadulbari/flask-simple-url-shortner
           tags: latest, ${{ github.run_number }}
